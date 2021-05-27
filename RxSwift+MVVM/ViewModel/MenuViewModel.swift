@@ -124,7 +124,7 @@ class MenuViewModel: MenuViewModelType {
                            increaseMenuCount: increasing.asObserver())
         
         self.output = Output(activated: activating.asDriver(),
-                             errorMessage: error.asObserver(),
+                             errorMessage: error,
                              allMenus: menus.asDriver(onErrorJustReturn: []),
                              totalCountText: totalCountText.asDriver(onErrorJustReturn: "0"),
                              totalPriceText: totalPriceText.asDriver(onErrorJustReturn: "\(0.currencyKR())"),
