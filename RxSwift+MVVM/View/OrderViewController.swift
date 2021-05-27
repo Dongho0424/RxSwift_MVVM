@@ -14,7 +14,7 @@ class OrderViewController: UIViewController {
     static let identifier = "OrderViewController"
     
     var viewModel = OrderViewModel()
-    let disposeBag = DisposeBag()
+    private let disposeBag = DisposeBag()
     
     // MARK: - Life Cycle
 
@@ -33,19 +33,19 @@ class OrderViewController: UIViewController {
             .bind(to: ordersListHeight.rx.constant)
             .disposed(by: disposeBag)
         
-        self.viewModel.orderedList
+        self.viewModel.output.orderedList
             .bind(to: ordersList.rx.text)
             .disposed(by: disposeBag)
 
-        self.viewModel.itemsPriceText
+        self.viewModel.output.itemsPriceText
             .bind(to: itemsPrice.rx.text)
             .disposed(by: disposeBag)
 
-        self.viewModel.itemsVatText
+        self.viewModel.output.itemsVatText
             .bind(to: vatPrice.rx.text)
             .disposed(by: disposeBag)
 
-        self.viewModel.totalPriceText
+        self.viewModel.output.totalPriceText
             .bind(to: totalPrice.rx.text)
             .disposed(by: disposeBag)
     }

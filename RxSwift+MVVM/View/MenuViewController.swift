@@ -16,13 +16,11 @@ import RxCocoa
 // 2. 로직 처리는 다 view model이 가지고 있음
 class MenuViewController: UIViewController {
     
-    let cellId = "MenuItemTableViewCell"
-    
-    let viewModel : MenuViewModelType
-    let disposeBag = DisposeBag()
+    private let viewModel : MenuViewModel
+    private let disposeBag = DisposeBag()
     
     // MARK: - Life Cycle
-    init(viewModel: MenuViewModelType = MenuViewModel()) {
+    init(viewModel : MenuViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
     }
@@ -62,7 +60,7 @@ class MenuViewController: UIViewController {
             .map { _ in () }
         let clearBtnTapped = self.clearBtn.rx.tap.map { _ in () }
         Observable.merge([viewWillAppeaer, clearBtnTapped])
-            .bind(to: self.viewModel.clearSelections)
+            .bind(to: self.viewModel.input.clearButtonSelected)
             .disposed(by: self.disposeBag)
         
         
@@ -72,28 +70,21 @@ class MenuViewController: UIViewController {
             .map{ _ in () }
         let refresh = self.tableView.refreshControl?.rx
             .controlEvent(.valueChanged)
-//            .do(onNext: { [weak self] in
-//                guard let `self` = self else {
-//                    print("dongho")
-//                    return
-//                }
-//                self.activityIndicator.stopAnimating()
-//            })
             .map { _ in () } ?? Observable.just(())
         Observable.merge([firstLoad, refresh])
-            .bind(to: self.viewModel.fetchMenus)
+            .bind(to: self.viewModel.input.fetchMenus)
             .disposed(by: self.disposeBag)
         
-        // order btn click
+        // order button click
         self.orderBtn.rx.tap
-            .bind(to: self.viewModel.makeOrder)
+            .bind(to: self.viewModel.input.makeOrder)
             .disposed(by: self.disposeBag)
         
         // ------------------------------
         //           NAVIGATION
         // ------------------------------
         
-        self.viewModel.orderPage
+        self.viewModel.output.orderPage
             .subscribe(onNext: { [weak self] in
                 self?.performSegue(withIdentifier: OrderViewController.identifier, sender: $0)
             })
@@ -105,50 +96,37 @@ class MenuViewController: UIViewController {
         // ------------------------------
         
         // activity indicator
-        self.viewModel.activated // observable
-            .observeOn(MainScheduler.asyncInstance)
+        self.viewModel.output.activated // observable
             .do(onNext: { [weak self] activated in
                 if !activated {
                     self?.tableView.refreshControl?.endRefreshing()
                 }
             })
-            .bind(to: self.activityIndicator.rx.isAnimating) // observer
-//            .subscribe(onNext: {
-//                if $0 {
-//                    self.activityIndicator.startAnimating()
-//                } else {
-//                    self.activityIndicator.stopAnimating()
-//                }
-//            })
+            .drive(self.activityIndicator.rx.isAnimating) // observer
             .disposed(by: self.disposeBag)
 
         // tableview cell 정보들
-        self.viewModel.allMenus
-            .observeOn(MainScheduler.asyncInstance)
-            .bind(to: self.tableView.rx.items(cellIdentifier: self.cellId, cellType: MenuItemTableViewCell.self)){
+        self.viewModel.output.allMenus
+            .drive(self.tableView.rx.items(cellIdentifier: MenuItemTableViewCell.identifer, cellType: MenuItemTableViewCell.self)){
                 index, item, cell in
                 
-                cell.onData.onNext(item)
+                cell.title.text = item.name
+                cell.count.text = "\(item.count)"
+                cell.price.text = "\(item.price)"
                 
-                // cell.onChanged(observable)을 increaseMenuCount(observser)가 subscribe
-                // 바인딩을 이 코드블럭에서 하는 이유는 특정 cell을 특정해야 특정 menu를
-                // viewModel의 increaseMenuCount로 전달하기 때문에
-                cell.countChanged // Observable<Int>
+                cell.countChanged
                     .map { (item, $0) }
-                    .bind(to: self.viewModel.increaseMenuCount)
+                    .bind(to: self.viewModel.input.increaseMenuCount)
                     .disposed(by: cell.disposeBag)
-                
             }
             .disposed(by: self.disposeBag)
                 
-        self.viewModel.totalCountText
-            .observeOn(MainScheduler.asyncInstance)
-            .bind(to: self.itemCountLabel.rx.text)
+        self.viewModel.output.totalCountText
+            .drive(self.itemCountLabel.rx.text)
             .disposed(by: self.disposeBag)
         
-        self.viewModel.totalPriceText
-            .observeOn(MainScheduler.asyncInstance)
-            .bind(to: self.totalPrice.rx.text)
+        self.viewModel.output.totalPriceText
+            .drive(self.totalPrice.rx.text)
             .disposed(by: self.disposeBag)
     }
 

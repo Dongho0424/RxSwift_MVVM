@@ -9,7 +9,8 @@
 import Foundation
 import RxSwift
 
-protocol MenuViewModelType {
+protocol MenuViewModelType0 {
+    
     var fetchMenus: AnyObserver<Void> { get }
     var clearSelections: AnyObserver<Void> { get }
     var makeOrder: AnyObserver<Void> { get }
@@ -27,7 +28,7 @@ protocol MenuViewModelType {
 // View Model
 // 모든 로직 처리를 담당하므로
 // 로직에서 생긴 오류는 여기서 찾으면 됨.
-class MenuViewModel: MenuViewModelType {
+class MenuViewModel0: MenuViewModelType0 {
     
     // INPUT
     var fetchMenus: AnyObserver<Void>
@@ -72,7 +73,7 @@ class MenuViewModel: MenuViewModelType {
                         var menus = [Menu]()
                         menuItems.enumerated().forEach {
                             (index, menuItem) in
-                            let menu = Menu.MenuFromMenuItem(id: index, item: menuItem)
+                            let menu = Menu.MenuFromMenuItem(menuItem)
                             menus.append(menu)
                         }
                         return menus // [Menu]
